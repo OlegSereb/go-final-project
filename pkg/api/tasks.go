@@ -24,7 +24,7 @@ type TasksResp struct {
 // tasksHandler обрабатывает GET /api/tasks[?search=...]
 func tasksHandler(w http.ResponseWriter, r *http.Request) {
 	searchQuery := r.URL.Query().Get("search")
-	limit := 50
+	limit := defaultTaskLimit
 
 	var dbTasks []*db.Task
 	var err error
@@ -36,7 +36,7 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		writeJSON(w, map[string]string{"error": "database error"})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "database error"})
 		return
 	}
 
@@ -52,5 +52,5 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSON(w, TasksResp{Tasks: apiTasks})
+	writeJSON(w, http.StatusOK, TasksResp{Tasks: apiTasks})
 }

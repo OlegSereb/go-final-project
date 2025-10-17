@@ -32,22 +32,7 @@ func Tasks(limit int) ([]*Task, error) {
 	}
 	defer rows.Close()
 
-	var tasks []*Task
-	for rows.Next() {
-		task := &Task{}
-		err := rows.Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat)
-		if err != nil {
-			return nil, err
-		}
-		tasks = append(tasks, task)
-	}
-
-	// Важно: возвращаем пустой слайс, а не nil
-	if tasks == nil {
-		tasks = []*Task{}
-	}
-
-	return tasks, rows.Err()
+	return scanTasks(rows)
 }
 
 // SearchTasks ищет задачи по поисковому запросу
@@ -75,7 +60,7 @@ func SearchTasks(query string, limit int) ([]*Task, error) {
 		}
 		defer rows.Close()
 
-		return scanTasks(rows)
+		return scanTasks(rows) // ✅ rows.Err() обработано внутри
 	}
 
 	// Поиск по тексту
@@ -111,10 +96,18 @@ func scanTasks(rows *sql.Rows) ([]*Task, error) {
 		}
 		tasks = append(tasks, task)
 	}
+
+	// Обрабатываем ошибку, которая могла возникнуть во время итерации
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Возвращаем пустой слайс вместо nil для корректной сериализации
 	if tasks == nil {
 		tasks = []*Task{}
 	}
-	return tasks, rows.Err()
+
+	return tasks, nil
 }
 
 // GetTask возвращает задачу по ID (id как строка)

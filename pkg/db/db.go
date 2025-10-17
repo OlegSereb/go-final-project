@@ -56,3 +56,11 @@ func AddTask(task *Task) (int64, error) {
 	}
 	return result.LastInsertId()
 }
+
+// Close закрывает соединение с базой данных
+func Close() error {
+	if db != nil {
+		return db.Close()
+	}
+	return nil
+}

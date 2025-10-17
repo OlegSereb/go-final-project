@@ -1,4 +1,3 @@
-// pkg/api/task.go
 package api
 
 import (
@@ -46,7 +45,7 @@ func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 		Repeat:  task.Repeat,
 	}
 
-	writeJSON(w, apiTask)
+	writeJSON(w, http.StatusOK, apiTask)
 }
 
 // updateTaskHandler обрабатывает PUT /api/task
@@ -102,8 +101,8 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Возвращаем пустой JSON
-	writeJSON(w, map[string]interface{}{})
+	// Возвращаем пустой JSON с кодом 200
+	writeJSON(w, http.StatusOK, map[string]interface{}{})
 }
 
 // deleteTaskHandler обрабатывает DELETE /api/task?id=123
@@ -119,5 +118,5 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]interface{}{})
+	writeJSON(w, http.StatusOK, map[string]interface{}{})
 }

@@ -1,4 +1,3 @@
-// pkg/api/done.go
 package api
 
 import (
@@ -9,6 +8,11 @@ import (
 
 // doneTaskHandler обрабатывает GET /api/task/done?id=123
 func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		http.Error(w, `{"error":"Не указан идентификатор"}`, http.StatusBadRequest)
@@ -21,14 +25,12 @@ func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Если задача одноразовая — удаляем
 	if task.Repeat == "" || task.Repeat == "none" {
 		if err := db.DeleteTask(id); err != nil {
 			http.Error(w, `{"error":"Ошибка удаления задачи"}`, http.StatusInternalServerError)
 			return
 		}
 	} else {
-		// Повторяющаяся задача — переносим на следующую дату
 		now := time.Now()
 		nextDate, err := NextDate(now, task.Date, task.Repeat)
 		if err != nil {
@@ -42,5 +44,5 @@ func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSON(w, map[string]interface{}{})
+	writeJSON(w, http.StatusOK, map[string]interface{}{})
 }

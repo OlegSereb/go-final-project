@@ -4,11 +4,31 @@ package api
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// afterNow проверяет, что дата строго позже now (без учёта времени суток)
+func afterNow(date, now time.Time) bool {
+	y1, m1, d1 := date.Date()
+	y2, m2, d2 := now.Date()
+	if y1 > y2 {
+		return true
+	}
+	if y1 < y2 {
+		return false
+	}
+	if m1 > m2 {
+		return true
+	}
+	if m1 < m2 {
+		return false
+	}
+	return d1 > d2
+}
 
 // NextDate вычисляет следующую дату выполнения задачи
 func NextDate(now time.Time, dstart, repeat string) (string, error) {
@@ -65,8 +85,13 @@ func NextDate(now time.Time, dstart, repeat string) (string, error) {
 	}
 }
 
-// NextDateHandler обрабатывает GET /api/nextdate
+// NextDateHandler обрабатывает GET /api/nextdate?now=...&date=...&repeat=...
 func NextDateHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	nowStr := r.FormValue("now")
 	dateStr := r.FormValue("date")
 	repeatStr := r.FormValue("repeat")
@@ -99,5 +124,8 @@ func NextDateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(next))
+	if _, err := w.Write([]byte(next)); err != nil {
+		log.Printf("Не удалось отправить ответ /api/nextdate: %v", err)
+		return
+	}
 }
